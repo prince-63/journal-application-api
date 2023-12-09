@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,53 +19,107 @@ public class JournalService {
     @Autowired
     private JournalRepository journalRepository;
     @Autowired
+    private UserService userService;
+    @Autowired
     private UserRepository userRepository;
+    private List<JournalEntity> journalEntities = new ArrayList<>();
 
     public void save(JournalEntity newJournal, ObjectId userId) {
-        // finding user in database
-        User user = userRepository.findById(userId).orElse(null);
-
+        User user = userService.getUserById(userId).orElse(null);
         if (user != null) {
             newJournal.setJournalDate(LocalDateTime.now());
+            newJournal.setId(ObjectId.get());
             user.getJournalEntities().add(newJournal);
             journalRepository.save(newJournal);
+            userService.createUser(user);
+        }
+    }
+
+    public void saveAll(List<JournalEntity> newJournalEntities, ObjectId userId) {
+        User user = userRepository.findById(userId).orElse(null);
+        if (user != null) {
+            for (JournalEntity item : newJournalEntities) {
+                item.setJournalDate(LocalDateTime.now());
+                item.setId(ObjectId.get());
+            }
+            user.getJournalEntities().addAll(newJournalEntities);
             userRepository.save(user);
+            journalRepository.saveAll(newJournalEntities);
         }
     }
 
-    public void saveAll(List<JournalEntity> newJournalEntities) {
-        for (JournalEntity item : newJournalEntities) {
-            item.setJournalDate(LocalDateTime.now());
+    public List<JournalEntity> getAll(ObjectId userId) {
+        journalEntities.clear();
+        User user = userService.getUserById(userId).orElse(null);
+        if (user != null) {
+            journalEntities.addAll(user.getJournalEntities());
         }
-        journalRepository.saveAll(newJournalEntities);
+        return journalEntities;
     }
 
-    public List<JournalEntity> getAll() {
-        return journalRepository.findAll();
+    public Optional<JournalEntity> getById(ObjectId userId, ObjectId journalId) {
+        Optional<JournalEntity> journalReturn = null;
+        User user = userService.getUserById(userId).orElse(null);
+        if (user != null) {
+            JournalEntity journal = journalRepository.findById(journalId).orElse(null);
+            if (journal != null) {
+                boolean isTrue = user.getJournalEntities().contains(journal);
+                if (isTrue) {
+                    journalReturn = journalRepository.findById(journalId);
+                }
+            }
+        }
+        ;
+        return journalReturn;
     }
 
-    public Optional<JournalEntity> getById(ObjectId id) {
-        return journalRepository.findById(id);
+    public boolean updateById(ObjectId userId, ObjectId journalId, JournalEntity newUpdatedJournal) {
+        User user = userService.getUserById(userId).orElse(null);
+        if (user != null) {
+            JournalEntity oldJournal = journalRepository.findById(journalId).orElse(null);
+            if (oldJournal != null) {
+                boolean isTrue = user.getJournalEntities().contains(oldJournal);
+                if (isTrue) {
+                    oldJournal.setJournalTitle(oldJournal.getJournalTitle().equals(newUpdatedJournal.getJournalTitle()) ? oldJournal.getJournalTitle() : newUpdatedJournal.getJournalTitle());
+                    oldJournal.setJournalDesc(oldJournal.getJournalDesc().equals(newUpdatedJournal.getJournalDesc()) ? oldJournal.getJournalDesc() : newUpdatedJournal.getJournalDesc());
+                    journalRepository.save(oldJournal);
+                    userService.createUser(user);
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
-    public boolean updateById(ObjectId id, JournalEntity newUpdatedJournal) {
-        JournalEntity oldJournal = journalRepository.findById(id).orElse(null);
-        if (oldJournal != null) {
-            oldJournal.setJournalTitle(oldJournal.getJournalTitle().equals(newUpdatedJournal.getJournalTitle()) ? oldJournal.getJournalTitle() : newUpdatedJournal.getJournalTitle());
-            oldJournal.setJournalDesc(oldJournal.getJournalDesc().equals(newUpdatedJournal.getJournalDesc()) ? oldJournal.getJournalDesc() : newUpdatedJournal.getJournalDesc());
-            journalRepository.save(oldJournal);
+    public boolean deleteAll(ObjectId userId) {
+        User user = userService.getUserById(userId).orElse(null);
+        if (user != null) {
+            for (JournalEntity journal : user.getJournalEntities()) {
+                journalRepository.deleteById(journal.getId());
+            }
+            // get user journal list
+            List<JournalEntity> journalEntities1 = user.getJournalEntities();
+            journalEntities1.clear();
+            userService.createUser(user);
             return true;
         }
         return false;
     }
 
-    public boolean deleteAll() {
-        journalRepository.deleteAll();
-        return true;
-    }
-
-    public boolean deleteById(ObjectId id) {
-        journalRepository.deleteById(id);
-        return true;
+    public boolean deleteById(ObjectId userId, ObjectId journalId) {
+        User user = userService.getUserById(userId).orElse(null);
+        if (user != null) {
+            JournalEntity journal = journalRepository.findById(journalId).orElse(null);
+            if (journal != null) {
+                boolean isTrue = user.getJournalEntities().contains(journal);
+                if (isTrue) {
+                    journalRepository.deleteById(journalId);
+                    user.getJournalEntities().remove(journal);
+                    userService.createUser(user);
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }

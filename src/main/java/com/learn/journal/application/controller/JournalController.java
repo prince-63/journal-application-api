@@ -21,33 +21,33 @@ public class JournalController {
         journalService.save(newJournal, userId);
     }
 
-    @PostMapping("/all")
-    public void saveAll(@RequestBody List<JournalEntity> newJournalEntities) {
-        journalService.saveAll(newJournalEntities);
+    @PostMapping("/all/{userId}")
+    public void saveAll(@RequestBody List<JournalEntity> newJournalEntities, @PathVariable ObjectId userId) {
+        journalService.saveAll(newJournalEntities, userId);
     }
 
-    @GetMapping
-    public List<JournalEntity> getAll() {
-        return journalService.getAll();
+    @GetMapping("/all/{userId}")
+    public List<JournalEntity> getAll(@PathVariable ObjectId userId) {
+        return journalService.getAll(userId);
     }
 
-    @GetMapping("/{id}")
-    public Optional<JournalEntity> getById(@PathVariable ObjectId id) {
-        return journalService.getById(id);
+    @GetMapping("/{userId}/{journalId}")
+    public Optional<JournalEntity> getById(@PathVariable ObjectId userId, @PathVariable ObjectId journalId) {
+        return journalService.getById(userId, journalId);
     }
 
-    @PutMapping("/{id}")
-    public boolean updateById(@PathVariable ObjectId id, @RequestBody JournalEntity newUpdatedJournal) {
-        return journalService.updateById(id, newUpdatedJournal);
+    @PutMapping("/{userId}/{journalId}")
+    public boolean updateById(@PathVariable ObjectId userId, @PathVariable ObjectId journalId, @RequestBody JournalEntity newUpdatedJournal) {
+        return journalService.updateById(userId, journalId, newUpdatedJournal);
     }
 
-    @DeleteMapping
-    public boolean deleteAll() {
-        return journalService.deleteAll();
+    @DeleteMapping("/all/{userId}")
+    public boolean deleteAll(@PathVariable ObjectId userId) {
+        return journalService.deleteAll(userId);
     }
 
-    @DeleteMapping("/{id}")
-    public boolean deleteById(@PathVariable ObjectId id) {
-        return journalService.deleteById(id);
+    @DeleteMapping("/{userId}/{journalId}")
+    public boolean deleteById(@PathVariable ObjectId userId, @PathVariable ObjectId journalId) {
+        return journalService.deleteById(userId, journalId);
     }
 }
