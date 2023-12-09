@@ -7,6 +7,7 @@ import com.learn.journal.application.repository.UserRepository;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -24,6 +25,7 @@ public class JournalService {
     private UserRepository userRepository;
     private List<JournalEntity> journalEntities = new ArrayList<>();
 
+    @Transactional
     public void save(JournalEntity newJournal, ObjectId userId) {
         User user = userService.getUserById(userId).orElse(null);
         if (user != null) {
@@ -35,6 +37,7 @@ public class JournalService {
         }
     }
 
+    @Transactional
     public void saveAll(List<JournalEntity> newJournalEntities, ObjectId userId) {
         User user = userRepository.findById(userId).orElse(null);
         if (user != null) {
@@ -73,6 +76,7 @@ public class JournalService {
         return journalReturn;
     }
 
+    @Transactional
     public boolean updateById(ObjectId userId, ObjectId journalId, JournalEntity newUpdatedJournal) {
         User user = userService.getUserById(userId).orElse(null);
         if (user != null) {
