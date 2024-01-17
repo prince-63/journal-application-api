@@ -1,4 +1,4 @@
-# Journal Application
+# Journal Application API
 
 This Spring Boot application provides RESTful API endpoints for managing journal entries and user information.
 
